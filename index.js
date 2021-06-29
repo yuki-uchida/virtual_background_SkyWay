@@ -1,41 +1,52 @@
 const canvasElement = document.getElementById("output_canvas");
-const canvasCtx = canvasElement.getContext("2d");
-const chara = new Image();
-chara.src = "./sample.jpeg";
-function onResults(results) {
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.drawImage(
-    results.segmentationMask,
-    0,
-    0,
-    canvasElement.width,
-    canvasElement.height
-  );
-  canvasCtx.globalCompositeOperation = "source-in";
-  canvasCtx.drawImage(
-    results.image,
-    0,
-    0,
-    canvasElement.width,
-    canvasElement.height
-  );
-  canvasCtx.globalCompositeOperation = "destination-atop";
-  canvasCtx.drawImage(chara, 0, 0, canvasElement.width, canvasElement.height);
-  canvasCtx.restore();
-  results.segmentationMask.close();
-  results.image.close();
+// ストリームの取得
+const segmentedLocalMediaStream = canvasElement.captureStream(); // 25 FPS
+const worker = new Worker("offscreen_worker.js");
+const offscreenCanvas = canvasElement.transferControlToOffscreen();
+
+async function loadImage() {
+  return new Promise((resolve, reject) => {
+    const backgroundImage = new Image();
+    backgroundImage.onload = () => resolve(backgroundImage);
+    backgroundImage.onerror = (e) => reject(backgroundImage);
+    backgroundImage.src = "./sample.jpeg";
+  });
 }
-const selfieSegmentation = new SelfieSegmentation({
-  locateFile: (file) => {
-    return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
-  },
-});
-selfieSegmentation.setOptions({
-  modelSelection: 1,
-});
-selfieSegmentation.onResults(onResults);
+
 (async function () {
+  const backgroundImage = await loadImage();
+  const backgroundImageBitMap = await createImageBitmap(backgroundImage);
+  worker.postMessage(
+    {
+      msg: "offscreen",
+      canvas: offscreenCanvas,
+      backgroundImageBitMap: backgroundImageBitMap,
+    },
+    [offscreenCanvas, backgroundImageBitMap]
+  );
+  function onResults(results) {
+    worker.postMessage(
+      {
+        msg: "imageBitMap",
+        results: results,
+      },
+      results
+    );
+    results.segmentationMask.close();
+    results.image.close();
+  }
+  const selfieSegmentation = new SelfieSegmentation({
+    locateFile: (file) => {
+      return `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`;
+    },
+  });
+  selfieSegmentation.setOptions({
+    modelSelection: 1,
+  });
+  selfieSegmentation.onResults(onResults);
+
+  //////////////////////////////////////////////////////
+
   const localMediaStream = await navigator.mediaDevices.getUserMedia({
     video: {
       width: 1080,
@@ -62,12 +73,9 @@ selfieSegmentation.onResults(onResults);
     },
   });
   processor.readable.pipeTo(writable);
-  // キャプチャしたい canvas 要素を取得
-  const canvasElt = document.getElementById("output_canvas");
-  // ストリームの取得
-  const segmentedLocalMediaStream = canvasElt.captureStream(); // 25 FPS
+
   const peer = new Peer({
-    key: "<YOUR API KEY>",
+    key: "YOUR API KEY",
     debug: 3,
   });
   peer.on("open", () => {
