@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script
+      src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.webrtc.ecl.ntt.com/skyway-4.4.1.js"></script>
+    <script src="./index.js" async></script>
+  </head>
+  <body>
+    <div class="container">
+      <div class="canvas-container">
+        <canvas id="output_canvas" width="1080px" height="720px"> </canvas>
+      </div>
+    </div>
+    <p id="my-id"></p>
+    <input id="their-id"></input>
+    <button id="make-call">発信</button>
+    <video id="their-video" width="400px" autoplay muted playsinline></video>
+  </body>
+</html>
