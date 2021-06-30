@@ -66,7 +66,7 @@ selfieSegmentation.onResults(onResults);
   // ストリームの取得
   const segmentedLocalMediaStream = canvasElement.captureStream();
   const peer = new Peer({
-    key: "c9ee5f88-86da-4f84-8b81-bc7f4623d302",
+    key: "<YOUR API KEY>",
     debug: 3,
   });
   peer.on("open", () => {
