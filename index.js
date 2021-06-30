@@ -35,7 +35,24 @@ selfieSegmentation.setOptions({
   modelSelection: 1,
 });
 selfieSegmentation.onResults(onResults);
-(async function () {
+
+let imageCapture;
+let prevTime;
+const rawVideoCanvas = document.getElementById("rawVideoCanvas");
+const videoTag = document.getElementById("videoTag");
+async function drawImage() {
+  if (Date.now() - prevTime > 60) {
+    prevTime = Date.now();
+    if (videoTag.currentTime != 0) {
+      const imageBitMap = await createImageBitmap(videoTag);
+      await selfieSegmentation.send({ image: imageBitMap });
+    }
+  }
+
+  window.requestAnimationFrame(drawImage);
+}
+
+window.onload = (async function () {
   const localMediaStream = await navigator.mediaDevices.getUserMedia({
     video: {
       width: 1080,
@@ -44,41 +61,28 @@ selfieSegmentation.onResults(onResults);
     },
     audio: false,
   });
-  const processor = new MediaStreamTrackProcessor(
-    localMediaStream.getVideoTracks()[0]
-  );
-  const writable = new WritableStream({
-    start() {
-      console.log("WritableStream started");
-    },
-    async write(videoFrame) {
-      const imageBitmap = await createImageBitmap(videoFrame);
-      await selfieSegmentation.send({ image: imageBitmap });
-      imageBitmap.close();
-      videoFrame.close();
-    },
-    stop() {
-      console.log("WritableStream stopped");
-    },
-  });
-  processor.readable.pipeTo(writable);
+  videoTag.srcObject = localMediaStream;
+  videoTag.play();
+  prevTime = Date.now();
+  window.requestAnimationFrame(drawImage);
 
-  // ストリームの取得
-  const segmentedLocalMediaStream = canvasElement.captureStream();
   const peer = new Peer({
-    key: "<YOUR API KEY>",
+    key: "YOUR API KEY",
     debug: 3,
   });
   peer.on("open", () => {
     document.getElementById("my-id").textContent = peer.id;
   });
   peer.on("call", (mediaConnection) => {
+    // ストリームの取得
+    const segmentedLocalMediaStream = canvasElement.captureStream();
     mediaConnection.answer(segmentedLocalMediaStream);
     setEventListener(mediaConnection);
   });
   // 発信処理
   document.getElementById("make-call").onclick = () => {
     const theirID = document.getElementById("their-id").value;
+    const segmentedLocalMediaStream = canvasElement.captureStream();
     const mediaConnection = peer.call(theirID, segmentedLocalMediaStream);
     setEventListener(mediaConnection);
   };
