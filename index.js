@@ -49,7 +49,7 @@ selfieSegmentation.onResults(onResults);
   );
   const writable = new WritableStream({
     start() {
-      console.log("Writable start");
+      console.log("WritableStream started");
     },
     async write(videoFrame) {
       const imageBitmap = await createImageBitmap(videoFrame);
@@ -58,16 +58,15 @@ selfieSegmentation.onResults(onResults);
       videoFrame.close();
     },
     stop() {
-      console.log("Writable stop");
+      console.log("WritableStream stopped");
     },
   });
   processor.readable.pipeTo(writable);
-  // キャプチャしたい canvas 要素を取得
-  const canvasElt = document.getElementById("output_canvas");
+
   // ストリームの取得
-  const segmentedLocalMediaStream = canvasElt.captureStream(); // 25 FPS
+  const segmentedLocalMediaStream = canvasElement.captureStream();
   const peer = new Peer({
-    key: "<YOUR API KEY>",
+    key: "c9ee5f88-86da-4f84-8b81-bc7f4623d302",
     debug: 3,
   });
   peer.on("open", () => {
