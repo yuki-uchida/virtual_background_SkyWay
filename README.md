@@ -16,5 +16,5 @@
 
 
 ## TODO
-- I can improve draw performance by using OffScreenCanvas(& FieldTrials of WebCodecs API)
+- I can improve drawing performance by using OffScreenCanvas(& FieldTrials of WebCodecs API)
   -  ref https://webrtchacks.com/smart-gallery/
