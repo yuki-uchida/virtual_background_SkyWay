@@ -13,3 +13,8 @@
 
 - `python -m http.server 8000`
 - open Google Chrome and go to [localhost:8000](localhost:8000)
+
+
+## TODO
+- I can improve draw performance by using OffScreenCanvas(& FieldTrials of WebCodecs API)
+  -  ref https://webrtchacks.com/smart-gallery/
